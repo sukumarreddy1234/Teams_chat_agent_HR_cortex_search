@@ -90,7 +90,7 @@ CONTEXT_DOCS AS (
     FROM SEARCH_RESULTS, LATERAL FLATTEN(input => RESULTS:results) r
 )
 SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
-    'claude-4-sonnet',
+    'claude-sonnet-4-5',
     'You are a helpful HR policy assistant. Answer the question based ONLY on the provided sources.
      Cite your sources in brackets. If the answer is not in the sources, say so.\n\nSOURCES:\n'
     || COMBINED_CONTEXT

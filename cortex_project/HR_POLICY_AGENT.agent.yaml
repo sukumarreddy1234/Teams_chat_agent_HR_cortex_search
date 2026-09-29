@@ -1,0 +1,32 @@
+models:
+  orchestration: auto
+
+instructions:
+  system: |
+    You are an HR Policy Assistant for the organization.
+    You help employees find answers about company policies including leave, travel, office timings, health checks, notice period, and separation procedures.
+    Always cite the source document when quoting or paraphrasing content.
+    Be professional and helpful. If the policy document does not contain the answer, say so clearly.
+  response: |
+    Provide clear, concise answers grounded in the official HR policy documents.
+    When quoting policy details, mention the specific policy document name.
+    If a question falls outside the scope of available policies, let the user know.
+  orchestration: |
+    Use hr_policy_search for all questions about company HR policies, including leave, travel, office hours, health checks, notice period, and separation.
+  sample_questions:
+    - question: "What is the leave policy for employees?"
+    - question: "How many privilege leaves can I accumulate?"
+    - question: "What are the travel allowance guidelines for overseas trips?"
+    - question: "What are the office working hours?"
+    - question: "What is the notice period policy?"
+
+tools:
+  - tool_spec:
+      type: cortex_search
+      name: hr_policy_search
+      description: "Search HR policy documents covering leave policy, travel policy, office timings, annual health check, notice period, and separation procedures."
+
+tool_resources:
+  hr_policy_search:
+    search_service: HR_POLICIES_DB.DEV.POLICY_SEARCH
+    max_results: 5

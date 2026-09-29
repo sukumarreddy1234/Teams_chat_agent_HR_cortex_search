@@ -1,0 +1,7 @@
+version: 1
+artifacts:
+  - path: HR_POLICY_AGENT.agent.yaml
+    type: cortex_agent
+    targets:
+      default:
+        object: HR_POLICIES_DB.DEV.HR_POLICY_AGENT

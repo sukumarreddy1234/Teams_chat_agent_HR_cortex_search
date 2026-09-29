@@ -42,17 +42,19 @@ eg:  TENANT_ID = 32556f75-fb5a-4c90-4545-57e2e6b60de1  (Note what's yours)
 --CREATE SECURITY INTEGRATION
 USE ROLE ACCOUNTADMIN;
 
+DESCRIBE SECURITY INTEGRATION ENTRA_ID_CORTEX_AGENTS_INTEGRATION;
+
 --*** Replace <TENANT-ID> with your account tenant_id and execute ***
 CREATE OR REPLACE SECURITY INTEGRATION entra_id_cortex_agents_integration 
 TYPE = EXTERNAL_OAUTH 
 ENABLED = TRUE 
 EXTERNAL_OAUTH_TYPE = AZURE 
-EXTERNAL_OAUTH_ISSUER = 'https://login.microsoftonline.com/<TENANT-ID>/v2.0'
-EXTERNAL_OAUTH_JWS_KEYS_URL = 'https://login.microsoftonline.com/<TENANT-ID>/discovery/v2.0/keys'
+EXTERNAL_OAUTH_ISSUER = 'https://login.microsoftonline.com/d63eab59-d181-4b26-8b89-25f935e45b2e/v2.0'
+EXTERNAL_OAUTH_JWS_KEYS_URL = 'https://login.microsoftonline.com/d63eab59-d181-4b26-8b89-25f935e45b2e/discovery/v2.0/keys'
 EXTERNAL_OAUTH_AUDIENCE_LIST = ('5a840489-78db-4a42-8772-47be9d833efe') EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = ('email', 'upn')
 EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'email_address' 
 EXTERNAL_OAUTH_ANY_ROLE_MODE = 'ENABLE'
-EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = ('SECURITYADMIN');
+EXTERNAL_OAUTH_ALLOWED_ROLES_LIST = ('SECURITYADMIN','ACCOUNTADMIN');
 
 /*=============================================================================
 Step 3: Tenant-wide Entra ID configuration
@@ -88,9 +90,12 @@ Step 4: CREATE ROLE AND PROVIDE ACCESS
 
 USE ROLE ACCOUNTADMIN;
 
+entra_id_cortex_agents_integration
 CREATE OR REPLACE ROLE TEAMS_CORTEX_AGENT_USER_ROLE;
 
 GRANT USAGE ON AGENT HR_POLICIES_DB.DEV.HR_POLICY_AGENT
+  TO ROLE TEAMS_CORTEX_AGENT_USER_ROLE;
+  GRANT USAGE ON AGENT HR_POLICIES_DB.DEV.HR_POLICY_AGENT2
   TO ROLE TEAMS_CORTEX_AGENT_USER_ROLE;
 GRANT DATABASE ROLE SNOWFLAKE.CORTEX_AGENT_USER
   TO ROLE TEAMS_CORTEX_AGENT_USER_ROLE;
@@ -103,23 +108,24 @@ GRANT USAGE ON WAREHOUSE CORTEX_DEMO_WH TO ROLE TEAMS_CORTEX_AGENT_USER_ROLE;
 /*=============================================================================
 Step 5: CREATE USER AND PROVIDE ACCESS
 =============================================================================*/
-CREATE OR REPLACE USER TEAMS_DEEPTI
-  LOGIN_NAME = 'deepti@snowflakeagentdemo.onmicrosoft.com' --this should be exactly same as your microsoft account user
-  EMAIL = 'deepti@snowflakeagentdemo.onmicrosoft.com' --this should be exactly same as your microsoft account email
+CREATE OR REPLACE USER TEAMS_SUKUMAR
+  LOGIN_NAME = 'sukumarreddy@indukuru.onmicrosoft.com' --this should be exactly same as your microsoft account user
+  EMAIL = 'sukumarreddy@indukuru.onmicrosoft.com' --this should be exactly same as your microsoft account email
   DEFAULT_ROLE = TEAMS_CORTEX_AGENT_USER_ROLE
   DEFAULT_WAREHOUSE = CORTEX_DEMO_WH
   MUST_CHANGE_PASSWORD = FALSE;
 
 GRANT ROLE TEAMS_CORTEX_AGENT_USER_ROLE
-  TO USER TEAMS_DEEPTI;
+  TO USER TEAMS_SUKUMAR;
 
+show users;
 /*=============================================================================
 Step 6: GIVE SECURITYADMIN ROLE TO THE USER TO SETUP THE AGENT AS AN ADMIN IN TEAMS
 =============================================================================*/
-GRANT ROLE SECURITYADMIN TO USER TEAMS_DEEPTI;
+GRANT ROLE ACCOUNTADMIN TO USER TEAMS_SUKUMAR;
 
-ALTER USER TEAMS_DEEPTI
-  SET DEFAULT_ROLE = SECURITYADMIN;
+ALTER USER TEAMS_SUKUMAR
+  SET DEFAULT_ROLE = ACCOUNTADMIN;
 
 /*=============================================================================
 Step 6: REMOVED ANY BLOCKED LIST EXTERNAL OAUTH PRIVILEGED ROLE FOR THE ACCOUNT
@@ -129,7 +135,21 @@ USE ROLE ACCOUNTADMIN;
 ALTER ACCOUNT
 SET EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST = FALSE;
 
+alter user SUKUCORTEXAI set email = 'sukumarreddy1234@gmail.com';
 
+SHOW USERS;
+
+SELECT 
+    LOWER("login_name") AS login,
+    LOWER("email") AS email
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+WHERE 
+    "login_name" ILIKE 'SukumarReddy@Indukuru.onmicrosoft.com'
+    OR "email" ILIKE 'SukumarReddy@Indukuru.onmicrosoft.com';
+
+-- To drop the user (uncomment and specify the user name):
+DROP USER IF EXISTS TEAMS_SUKUMAR;
+    
 /*=============================================================================
 All these steps need to be executed sequentially and we have configured the tenant id setup for our microsoft account.
 Next step would be to download Teams App and start talking to your agent.
@@ -138,3 +158,18 @@ If you get stuck any where in the above steps:
 Please refer to https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration
 Go to next setup sheet to configure agent in teams app.
 =============================================================================*/
+
+CREATE OR REPLACE USER RAMTEJ
+  LOGIN_NAME = 'Ramtej Reddy' --this should be exactly same as your microsoft account user
+  EMAIL = 'SukumarReddy@Indukuru.onmicrosoft.com' --this should be exactly same as your microsoft account email
+  DEFAULT_ROLE = TEAMS_CORTEX_AGENT_USER_ROLE
+  DEFAULT_WAREHOUSE = CORTEX_DEMO_WH
+  MUST_CHANGE_PASSWORD = FALSE;
+
+GRANT ROLE TEAMS_CORTEX_AGENT_USER_ROLE
+  TO USER RAMTEJ;
+
+  GRANT ROLE SECURITYADMIN TO USER RAMTEJ;
+
+ALTER USER RAMTEJ
+  SET DEFAULT_ROLE = SECURITYADMIN;

@@ -20,7 +20,7 @@ USE DATABASE HR_POLICIES_DB;
 USE SCHEMA HR_POLICIES_DB.DEV;
 USE WAREHOUSE CORTEX_DEMO_WH;
 
-CREATE OR REPLACE AGENT HR_POLICIES_DB.DEV.HR_POLICY_AGENT
+CREATE OR REPLACE AGENT HR_POLICIES_DB.DEV.HR_POLICY_AGENT2
   FROM SPECIFICATION $$
 models:
   orchestration: auto
@@ -115,3 +115,40 @@ WITH RESP AS (
     TRUE)) AS R
 )
 SELECT f.value:text::STRING AS ANSWER FROM RESP, LATERAL FLATTEN(input => R:content) f WHERE f.value:type = 'text';
+
+CREATE OR REPLACE MCP SERVER hrpolicy_mcp_server
+    FROM SPECIFICATION $$
+    tools:
+      - name: "HR-Policy-Details"
+        type: "CORTEX_AGENT_RUN"
+        identifier: "HR_POLICIES_DB.DEV.HR_POLICY_AGENT"
+        description: "HR Policy Agent is your virtual HR assistant, designed to answer questions about company policies and workplace guidelines. Whether you need information about leave, benefits, work hours, reimbursements, or employee programs, the agent provides fast, reliable, and easy-to-understand responses based on approved HR policies."
+        title: "HR Policy Agent"
+    $$;
+
+    SELECT SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('SF_MCP_OAUTH3');
+    SELECT PARSE_JSON(SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('SF_MCP_OAUTH')):OAUTH_CLIENT_SECRET::string AS my_secret;
+
+    show MCP SERVERS;
+
+    SELECT PARSE_JSON(SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('SF_MCP_OAUTH'))
+         :OAUTH_CLIENT_ID::string     AS client_id,
+       PARSE_JSON(SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('SF_MCP_OAUTH'))
+         :OAUTH_CLIENT_SECRET::string AS client_secret;
+
+DESCRIBE SECURITY INTEGRATION sf_mcp_oauth3;
+
+CREATE or replace SECURITY INTEGRATION sf_mcp_oauth
+  TYPE = OAUTH
+  OAUTH_CLIENT = CUSTOM
+  ENABLED = TRUE
+  OAUTH_CLIENT_TYPE = 'CONFIDENTIAL'
+  OAUTH_ISSUE_REFRESH_TOKENS = TRUE
+  OAUTH_REFRESH_TOKEN_VALIDITY = 86400
+  OAUTH_USE_SECONDARY_ROLES = IMPLICIT
+  OAUTH_REDIRECT_URI = 'https://localhost';
+
+  ALTER SECURITY INTEGRATION sf_mcp_oauth
+  SET OAUTH_REDIRECT_URI = 'https://global.consent.azure-apim.net/redirect/cr157-5fhrpolicy-5fmcp-5fserver2-5f22a3db184ffa322c';
+
+  desc INTEGRATION sf_mcp_oauth;
